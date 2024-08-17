@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Yup from 'yup';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { Formik, Form as FormikForm, Field, ErrorMessage } from 'formik';
 import axios from 'axios';
 
 // 👇 Here are the validation errors you will use with Yup.
@@ -52,7 +52,7 @@ export default function Form() {
   return (
     <Formik initialValues={{ fullName: '', size: '', toppings: [], }} validationSchema={validationSchema} onSubmit={handleSubmit}>
       {({ isValid }) => (
-        <Form>
+        <FormikForm>
           <h2>Order Your Pizza</h2>
           {formStatus === 'success' && <div className="success">Thank you for your order!</div>}
           {formStatus === 'error' && <div className="failure">Something went wrong</div>}
@@ -92,7 +92,7 @@ export default function Form() {
         </div>
         {/* 👇 Make sure the submit stays disabled until the form validates! */}
         <input type="submit" disabled={!isValid} value="Order Pizza" />
-      </Form>
+      </FormikForm>
       )}
     </Formik>
   );

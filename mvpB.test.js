@@ -1,9 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Form from './frontend/components/Form';
+import Form from './components/Form';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { Formik } from 'formik';
 
 describe('Sprint 7 Challenge Learner Tests', () => {
   /*
