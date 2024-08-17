@@ -11,16 +11,10 @@ const validationErrors = {
 }
 
 // 👇 Here you will create your schema.
-const validationSchema = Yup.object({
-  fullName: Yup.string()
-   .trim()
-   .min(3, 'Must be at least 3 characters')
-   .max(20, 'Must be 20 characters or less')
-   .required('Required'),
-  size: Yup.string()
-   .oneOf(['S', 'M', 'L'], 'Invalid size')
-   .required('Required'),
-  toppings: Yup.array(),
+const validationSchema = Yup.object().shape({
+  fullName: yup.string().trim().min(3).max(20).required('Full name is required'),
+  size: yup.string().oneOf(['S', 'M', 'L'], 'Invalid size').required('Size is required'),
+  toppings: yup.array().of(yup.number().oneOf([1, 2, 3, 4, 5]))
 });
 
 // 👇 This array could help you construct your checkboxes using .map in the JSX.
@@ -34,82 +28,96 @@ const toppings = [
 
 export default function PizzaOrderForm() {
   const [formStatus, setFormStatus] = useState(null); // Track form submission status
+  const [formValues, setFormValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormValues(prev => ({
+        ...prev,
+        toppings: checked
+          ? [...prev.toppings, Number(value)]
+          : prev.toppings.filter(topping => topping !== Number(value))
+      }));
+    } else {
+      setFormValues({ ...formValues, [name]: value });
+    }
+  };
 
   // Handle form submission
-  const handleSubmit = async (values, { resetForm }) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    setSuccessMessage('');
+
     try {
-      const response = await axios.post('http://localhost:9009/api/order', values);
-      if (response.status === 201) {
-        setFormStatus('success');
-        resetForm(); // Reset the form on successful submission
+      await schema.validate(formValues, { abortEarly: false });
+      const response = await axios.post('http://localhost:9009/api/order', formValues);
+      setSuccessMessage(response.data.message);
+      setFormValues(initialValues);
+    } catch (err) {
+      if (err.name === 'ValidationError') {
+        const newErrors = {};
+        err.inner.forEach(error => {
+          newErrors[error.path] = error.message;
+        });
+        setErrors(newErrors);
+      } else {
+        console.error('API Error:', err);
       }
-    } catch (error) {
-      setFormStatus('error');
     }
   };
 
   return (
-    <Formik initialValues={{ fullName: '', size: '', toppings: [], }} validationSchema={validationSchema} onSubmit={Formik.handleSubmit}>
-      {({ isValid }) => (
-        <FormikForm>
-          <h2>Order Your Pizza</h2>
-          {formStatus === 'success' && <div className="success">Thank you for your order!</div>}
-          {formStatus === 'error' && <div className="failure">Something went wrong</div>}
-  
-          <div className="input-group">
-            <div>
-              <label htmlFor="fullName">Full Name</label><br />
-              <Field name="fullName" type="text" placeholder="Type full name" id="fullName" />
-              <ErrorMessage name="fullName" component="div" className="error" />
-            </div>
-          </div>
-  
-          <div className="input-group">
-            <div>
-              <label htmlFor="size">Size</label><br />
-              <Field as="select" name="size" id="size">
-                <option value="">----Choose Size----</option>
-                <option value="S">Small</option>
-                <option value="M">Medium</option>
-                <option value="L">Large</option>
-              </Field>
-              <ErrorMessage name="size" component="div" className="error" />
-            </div>
-          </div>
-  
-          <div className="input-group">
-          {/* 👇 Maybe you could generate the checkboxes dynamically */}
-            <label>Toppings:</label>
-            {toppings.map(topping => (
-              <div key={topping.topping_id}>
-                <label>
-                  <Field type="checkbox" name="toppings" value="1" as="input" />
-                  Pepperoni
-                </label>
-                <label>
-                  <Field as="input" type="checkbox" name="toppings" value="2" />
-                  Green Peppers
-                </label>
-                <label>
-                  <Field as="input" type="checkbox" name="toppings" value="3" />
-                  Pineapple
-                </label>
-                <label>
-                  <Field as="input" type="checkbox" name="toppings" value="4" />
-                  Mushrooms
-                </label>
-                <label>
-                  <Field as="input" type="checkbox" name="toppings" value="5" />
-                  Ham
-                </label>
-              </div>
-            ))}
-        </div>
-        {/* 👇 Make sure the submit stays disabled until the form validates! */}
-        <input type="submit" disabled={!isValid} value="Order Pizza" />
-        {successMessage && <div>{successMessage}</div>}
-      </FormikForm>
-      )}
-    </Formik>
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label for="fullName">Full Name:</label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          value={formValues.fullName}
+          onChange={handleChange}
+        />
+        {errors.fullName && <p>{errors.fullName}</p>}
+      </div>
+
+      <div>
+        <label for="size">Size:</label>
+        <select
+          id="size"
+          name="size"
+          value={formValues.size}
+          onChange={handleChange}
+        >
+          <option value="">Select a size</option>
+          <option value="S">Small</option>
+          <option value="M">Medium</option>
+          <option value="L">Large</option>
+        </select>
+        {errors.size && <p>{errors.size}</p>}
+      </div>
+
+      <div>
+        <p>Toppings:</p>
+        {['Pepperoni', 'Green Peppers', 'Pineapple', 'Mushrooms', 'Ham'].map((topping, index) => (
+          <label key={index}>
+            <input
+             type="checkbox"
+             name="toppings"
+             value={index + 1}
+             checked={formValues.toppings.includes(index + 1)}
+             onChange={handleChange}
+            />
+          </label>
+        ))}
+      </div>
+
+      <input type="submit" value="Order Pizza" />
+
+      {successMessage && <p>{successMessage}</p>}
+    </form>
   );
 };
