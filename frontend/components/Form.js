@@ -33,7 +33,7 @@ const toppings = [
   { topping_id: '5', text: 'Ham' },
 ]
 
-export default function Form() {
+export default function PizzaOrderForm() {
   const [formStatus, setFormStatus] = useState(null); // Track form submission status
 
   // Handle form submission
