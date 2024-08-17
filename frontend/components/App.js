@@ -12,7 +12,7 @@ function App() {
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/order" element={<Form />} />
+        <Route path="/order" element={<PizzaOrderForm />} />
       </Routes>
     </div>
   );

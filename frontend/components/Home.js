@@ -2,7 +2,7 @@ import React from 'react';
 import pizza from './images/pizza.jpg';
 import { useNavigate } from 'react-router-dom';
 
-function Home() {
+const Home = () => {
   const navigate = useNavigate();
 
   const handleImageClick = () => {
@@ -11,13 +11,10 @@ function Home() {
 
   return (
     <div>
-      <h2>
-        Welcome to Bloom Pizza!
-      </h2>
-      {/* clicking on the img should navigate to "/order" */}
-      <img alt="order-pizza" style={{ cursor: 'pointer' }} src={'./components/images/pizza.jpg'} onClick={handleImageClick} />
+      <h1>Welcome to Pizza Order</h1>
+      <img src="./images/pizza.jpg" alt="order-pizza" onClick={handleImageClick} />
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
