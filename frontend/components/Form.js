@@ -48,6 +48,8 @@ export default function PizzaOrderForm() {
     try {
       validationSchema.validateSyncAt(name, formValues);
       setErrors(prev => ({ ...prev, [name]: err.message }));
+    } catch (err) {
+      setErrors(prev => ({ ...prev, [name]: err.message }));
     }
   };
 
