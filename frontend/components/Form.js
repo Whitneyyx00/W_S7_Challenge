@@ -44,13 +44,15 @@ export default function PizzaOrderForm() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage('');
 
     try {
-      validationSchema.validateSync(formValues, { abortEarly: false });
+       await validationSchema.validate(formValues, { abortEarly: false });
+       // Simulate API call
+       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
       setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
       setFormValues(initialValues);
     } catch (err) {
@@ -67,7 +69,7 @@ export default function PizzaOrderForm() {
   };
 
   const isFormValid = () => {
-    return formValues.fullName.length >= 3 && formValues.fullName.length <= 20 && ['S', 'M', 'L'].includes(formValues.size);
+    return formValues.fullName.trim().length >= 3 && ['S', 'M', 'L'].includes(formValues.size);
   };
 
   return (
@@ -82,7 +84,7 @@ export default function PizzaOrderForm() {
           value={formValues.fullName}
           onChange={handleChange}
         />
-        {errors.fullName && <p>{errors.fullName}</p>}
+        {errors.fullName && <p className="error">{errors.fullName}</p>}
       </div>
 
       <div>
@@ -98,7 +100,7 @@ export default function PizzaOrderForm() {
           <option value="M">Medium</option>
           <option value="L">Large</option>
         </select>
-        {errors.size && <p>{errors.size}</p>}
+        {errors.size && <p className="error">{errors.size}</p>}
       </div>
 
       <div>
