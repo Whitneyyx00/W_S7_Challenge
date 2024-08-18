@@ -67,6 +67,10 @@ export default function PizzaOrderForm() {
     }
   };
 
+  const isFormValid = () => {
+    return formValues.fullName.length >= 3 && formValues.fullName.length <= 20 && ['S', 'M', 'L'].includes(formValues.size);
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <div>
@@ -108,11 +112,12 @@ export default function PizzaOrderForm() {
               checked={formValues.toppings.includes(Number(topping.topping_id))}
               onChange={handleChange}
             />
+            {topping.text}
           </label>
         ))}
       </div>
 
-      <button type="submit">Order Pizza</button>
+      <button type="submit" disabled={!isFormValid()}>Order Pizza</button>
 
       {successMessage && <p>{successMessage}</p>}
     </form>
