@@ -4,8 +4,8 @@ import axios from 'axios';
 
 // 👇 Here you will create your schema.
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').required('Full name is required'),
-  size: Yup.string().oneOf(['S', 'M', 'L'], 'size must be S or M or L').required('Size is required'),
+  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').required('full name is required'),
+  size: Yup.string().oneOf(['S', 'M', 'L'], 'size must be S or M or L').required('size is required'),
   toppings: Yup.array().of(Yup.number().oneOf([1, 2, 3, 4, 5]))
 });
 
@@ -43,16 +43,22 @@ export default function PizzaOrderForm() {
     }
   };
 
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    try {
+      validationSchema.validateSyncAt(name, formValues);
+      setErrors(prev => ({ ...prev, [name]: err.message }));
+    }
+  };
+
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage('');
 
     try {
-       await validationSchema.validate(formValues, { abortEarly: false });
-       // Simulate API call
-       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+       validationSchema.validateSync(formValues, { abortEarly: false });
       setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
       setFormValues(initialValues);
     } catch (err) {
@@ -83,6 +89,7 @@ export default function PizzaOrderForm() {
           name="fullName"
           value={formValues.fullName}
           onChange={handleChange}
+          onBlur={handleBlur}
         />
         {errors.fullName && <p className="error">{errors.fullName}</p>}
       </div>
@@ -94,6 +101,7 @@ export default function PizzaOrderForm() {
           name="size"
           value={formValues.size}
           onChange={handleChange}
+          onBlur={handleBlur}
         >
           <option value="">Select a size</option>
           <option value="S">Small</option>
