@@ -7,18 +7,7 @@ import axios from 'axios';
 
 jest.mock('axios');
 
-describe('Sprint 7 Challenge Learner Tests', () => {
-  /*
-  👉 TASK 1 - Unit Testing of sum function at the bottom of this module
-
-  Test the following. You can create separate tests or a single test with multiple assertions.
-
-    [1] sum() // throws an error 'pass valid numbers'
-    [2] sum(2, 'seven') // throws an error 'pass valid numbers'
-    [3] sum(1, 3) // returns 4
-    [4] sum('1', 2) // returns 3
-    [5] sum('10', '3') // returns 13
-  */
+describe('PizzaOrderForm', () => {
  test('renders form elements', () => {
   render(<PizzaOrderForm />);
   expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();

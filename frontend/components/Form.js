@@ -1,21 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import * as Yup from 'yup';
-import { Formik, Form as FormikForm, Field, ErrorMessage } from 'formik';
 import axios from 'axios';
-
-// 👇 Here are the validation errors you will use with Yup.
-const validationErrors = {
-  fullNameTooShort: 'full name must be at least 3 characters',
-  fullNameTooLong: 'full name must be at most 20 characters',
-  sizeIncorrect: 'size must be S or M or L'
-}
 
 // 👇 Here you will create your schema.
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string().trim().min(3).max(20).required('Full name is required'),
-  size: Yup.string().oneOf(['S', 'M', 'L'], 'Invalid size').required('Size is required'),
+  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').max(20, 'full name must be at most 20 characters').required('Full name is required'),
+  size: Yup.string().oneOf(['S', 'M', 'L'], 'size must be S or M or L').required('Size is required'),
   toppings: Yup.array().of(Yup.number().oneOf([1, 2, 3, 4, 5]))
 });
+
+const initialValues = {
+  fullName: '',
+  size: '',
+  toppings: []
+};
 
 // 👇 This array could help you construct your checkboxes using .map in the JSX.
 const toppings = [
@@ -27,7 +25,6 @@ const toppings = [
 ]
 
 export default function PizzaOrderForm() {
-  const [formStatus, setFormStatus] = useState(null); // Track form submission status
   const [formValues, setFormValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
@@ -53,7 +50,7 @@ export default function PizzaOrderForm() {
     setSuccessMessage('');
 
     try {
-      await schema.validate(formValues, { abortEarly: false });
+      await validationSchema.validate(formValues, { abortEarly: false });
       const response = await axios.post('http://localhost:9009/api/order', formValues);
       setSuccessMessage(response.data.message);
       setFormValues(initialValues);
@@ -73,7 +70,7 @@ export default function PizzaOrderForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div>
-        <label for="fullName">Full Name:</label>
+        <label htmlFor="fullName">Full Name:</label>
         <input
           type="text"
           id="fullName"
@@ -85,7 +82,7 @@ export default function PizzaOrderForm() {
       </div>
 
       <div>
-        <label for="size">Size:</label>
+        <label htmlFor="size">Size:</label>
         <select
           id="size"
           name="size"
@@ -102,22 +99,22 @@ export default function PizzaOrderForm() {
 
       <div>
         <p>Toppings:</p>
-        {['Pepperoni', 'Green Peppers', 'Pineapple', 'Mushrooms', 'Ham'].map((topping, index) => (
-          <label key={index}>
+        {toppings.map((topping) => (
+          <label key={topping.topping_id}>
             <input
-             type="checkbox"
-             name="toppings"
-             value={index + 1}
-             checked={formValues.toppings.includes(index + 1)}
-             onChange={handleChange}
+              type="checkbox"
+              name="toppings"
+              value={topping.topping_id}
+              checked={formValues.toppings.includes(Number(topping.topping_id))}
+              onChange={handleChange}
             />
           </label>
         ))}
       </div>
 
-      <input type="submit" value="Order Pizza" />
+      <button type="submit">Order Pizza</button>
 
       {successMessage && <p>{successMessage}</p>}
     </form>
   );
-};
+}
