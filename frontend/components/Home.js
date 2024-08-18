@@ -11,7 +11,7 @@ const Home = () => {
 
   return (
     <div>
-      <h1>Welcome to Bloom Pizza</h1>
+      <h2>Welcome to Bloom Pizza!</h2>
       <img src={pizza} alt="order-pizza" onClick={handleImageClick} style={{ cursor: 'pointer' }} />
     </div>
   );

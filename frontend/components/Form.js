@@ -4,7 +4,7 @@ import axios from 'axios';
 
 // 👇 Here you will create your schema.
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').max(20, 'full name must be at most 20 characters').required('Full name is required'),
+  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').required('Full name is required'),
   size: Yup.string().oneOf(['S', 'M', 'L'], 'size must be S or M or L').required('Size is required'),
   toppings: Yup.array().of(Yup.number().oneOf([1, 2, 3, 4, 5]))
 });
@@ -44,15 +44,14 @@ export default function PizzaOrderForm() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage('');
 
     try {
-      await validationSchema.validate(formValues, { abortEarly: false });
-      const response = await axios.post('http://localhost:9009/api/order', formValues);
-      setSuccessMessage(response.data.message);
+      validationSchema.validateSync(formValues, { abortEarly: false });
+      setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
       setFormValues(initialValues);
     } catch (err) {
       if (err.name === 'ValidationError') {
@@ -73,6 +72,7 @@ export default function PizzaOrderForm() {
 
   return (
     <form onSubmit={handleSubmit}>
+      <h2>Order Your Pizza</h2>
       <div>
         <label htmlFor="fullName">Full Name:</label>
         <input
@@ -117,7 +117,7 @@ export default function PizzaOrderForm() {
         ))}
       </div>
 
-      <button type="submit" disabled={!isFormValid()}>Order Pizza</button>
+      <button type="submit" disabled={!isFormValid()} data-testid="submit-button">Order Pizza</button>
 
       {successMessage && <p>{successMessage}</p>}
     </form>
