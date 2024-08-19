@@ -5,7 +5,7 @@ import axios from 'axios';
 const validationErrors = {
   fullNameTooShort: 'full name must be at least 3 characters',
   fullNameTooLong: 'full name must be at most 20 characters',
-  sizeIncorrect: 'size must be S or M or L',
+  sizeIncorrect: 'size must be S, M, or L',
 };
 
 const validationSchema = Yup.object().shape({
@@ -73,7 +73,7 @@ export default function Form() {
       await validationSchema.validate(formValues, { abortEarly: false });
       const response = await axios.post('http://localhost:9009/api/order', payload);
       const { message } = response.data;
-      setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
+      setSuccessMessage(message);
       setFailureMessage('');
       setFormValues(initialValues);
       setErrors(initialErrors); // Reset errors to intital state after successful submission
