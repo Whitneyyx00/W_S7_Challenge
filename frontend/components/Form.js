@@ -28,6 +28,7 @@ export default function PizzaOrderForm() {
   const [formValues, setFormValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -47,21 +48,26 @@ export default function PizzaOrderForm() {
     const { name } = e.target;
     try {
       validationSchema.validateSyncAt(name, formValues);
-      setErrors(prev => ({ ...prev, [name]: err.message }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     } catch (err) {
       setErrors(prev => ({ ...prev, [name]: err.message }));
     }
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage('');
+    setIsSubmitting(true);
 
     try {
-       validationSchema.validateSync(formValues, { abortEarly: false });
-      setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
+      await validationSchema.validate(formValues, { abortEarly: false });
+
+      // Axios integration
+      const response = await axios.post('https://localhost:9009/order', formValues);
+
+      setSuccessMessage(`Thank you for your order, ${formValues.fullName}! Order ID: ${response.data.orderId}`);
       setFormValues(initialValues);
     } catch (err) {
       if (err.name === 'ValidationError') {
@@ -72,7 +78,10 @@ export default function PizzaOrderForm() {
         setErrors(newErrors);
       } else {
         console.error('API Error:', err);
+        setErrors({ api: 'An error occured while submitting your order. Please try again.' });
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,57 +90,68 @@ export default function PizzaOrderForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <h2>Order Your Pizza</h2>
+
+    <fieldset>
       <div>
-        <label htmlFor="fullName">Full Name:</label>
+        <legend htmlFor="fullName">Full Name:</legend>
         <input
           type="text"
           id="fullName"
           name="fullName"
+          placeholder="Type full name"
           value={formValues.fullName}
           onChange={handleChange}
           onBlur={handleBlur}
+          aria-invalid={errors.fullName ? "true" : "false"}
+          aria-describedby="fullNameError"
         />
-        {errors.fullName && <p className="error">{errors.fullName}</p>}
+        {errors.fullName && <p id="fullNameError" className="error">{errors.fullName}</p>}
       </div>
-
+    </fieldset>
+    <br />
+    <fieldset>
       <div>
-        <label htmlFor="size">Size:</label>
+        <legend htmlFor="size">Size:</legend>
         <select
           id="size"
           name="size"
           value={formValues.size}
           onChange={handleChange}
           onBlur={handleBlur}
+          aria-invalid={errors.size ? "true" : "false"}
+          aria-describedby="sizeError"
         >
-          <option value="">Select a size</option>
+          <option value="">----Choose Size----</option>
           <option value="S">Small</option>
           <option value="M">Medium</option>
           <option value="L">Large</option>
         </select>
-        {errors.size && <p className="error">{errors.size}</p>}
+        {errors.size && <p id="sizeError" className="error">{errors.size}</p>}
       </div>
-
-      <div>
-        <p>Toppings:</p>
+    </fieldset>
+    <br />
+      <fieldset>
         {toppings.map((topping) => (
-          <label key={topping.topping_id}>
+          <div key={topping.topping_id}>
             <input
               type="checkbox"
+              id={`topping-${topping.topping_id}`}
               name="toppings"
               value={topping.topping_id}
               checked={formValues.toppings.includes(Number(topping.topping_id))}
               onChange={handleChange}
             />
-            {topping.text}
-          </label>
+            <label htmlFor={`topping-${topping.topping_id}`}>{topping.text}</label>
+          </div>
         ))}
-      </div>
+      </fieldset>
+      <br />
+      <button type="submit" disabled={!isFormValid() || isSubmitting} data-testid="submit-button">{isSubmitting ? 'Ordering...' : 'Order Pizza'}</button>
 
-      <button type="submit" disabled={!isFormValid()} data-testid="submit-button">Order Pizza</button>
-
-      {successMessage && <p>{successMessage}</p>}
+      {successMessage && <p className="success">{successMessage}</p>}
+      {errors.api && <p className="error">{errors.api}</p>}
     </form>
   );
 }

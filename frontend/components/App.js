@@ -1,6 +1,6 @@
 import React from 'react';
 import Home from './Home';
-import PizzaOrderForm from './components/Form';
+import PizzaOrderForm from './Form';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
 function App() {
