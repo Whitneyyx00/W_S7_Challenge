@@ -14,6 +14,8 @@ const config = {
   // The directory where Jest should store its cached dependency information
   // cacheDirectory: "/private/var/folders/96/mtz831_d14j85kmn9jcn1mc40000gn/T/jest_dx",
 
+  testTimeout: 5000;
+  
   // Automatically clear mock calls, instances, contexts and results before every test
   // clearMocks: false,
 
