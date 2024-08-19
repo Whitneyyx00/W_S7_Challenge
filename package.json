@@ -54,11 +54,5 @@
   "engines": {
     "node": ">=16.x",
     "npm": ">=8.x"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.jsx?$": "babel-jest"
-    },
-    "testEnvironment": "jsdom"
   }
 }
