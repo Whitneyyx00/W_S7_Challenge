@@ -108,7 +108,7 @@ export default function Form() {
         // Validate individual form field value
         Yup.reach(validationSchema, name)
           .validate(value);
-          .then(() => setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })))
+          then(() => setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })))
           .catch((err) => setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })));
       } catch (error) {
         console.error(error);
