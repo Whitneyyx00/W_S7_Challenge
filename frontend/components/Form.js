@@ -19,16 +19,16 @@ const validationSchema = Yup.object().shape({
   toppings: Yup.array().of(Yup.number()).required(),
 });
 
-const initialValues = {
+const initialValues =  {
   fullName: '',
   size: '',
   toppings: []
 };
 
-const initialErrors = () => ({
+const initialErrors = {
   fullName: '',
   size: '',
-});
+};
 
 const toppings = [
   { topping_id: '1', text: 'Pepperoni' },
@@ -39,8 +39,8 @@ const toppings = [
 ]
 
 export default function Form() {
-  const [formValues, setFormValues] = useState(initialValues());
-  const [errors, setErrors] = useState(initialErrors());
+  const [formValues, setFormValues] = useState(initialValues);
+  const [errors, setErrors] = useState(initialErrors);
   const [successMessage, setSuccessMessage] = useState('');
   const [failureMessage, setFailureMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -106,8 +106,12 @@ export default function Form() {
 
       try {
         // Validate individual form field value
-        await Yup.reach(validationSchema, name).validate(trimmedValue);
-        setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })); // Set error message if invalid
+        Yup.reach(validationSchema, name)
+          .validate(value);
+          .then(() => setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })))
+          .catch((err) => setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })));
+      } catch (error) {
+        console.error(error);
       }
     }
   };
@@ -122,7 +126,7 @@ export default function Form() {
       <div>
         <label htmlFor="fullName">Full Name</label>
         <input
-          value={values.fullName} // Value for fullName
+          value={formValues.fullName} // Value for fullName
           name="fullName" // Name attribute for fullName
           onChange={handleChange} // Change handler for fullName
           placeholder="Type full name"
@@ -139,7 +143,7 @@ export default function Form() {
         <select
           name="size"
           onChange={handleChange}
-          value={values.size}
+          value={formValues.size}
           id="size"
         >
           <option value="">----Choose Size----</option>
@@ -157,7 +161,7 @@ export default function Form() {
             <input
               type="checkbox"
               name={topping.text}
-              checked={values.toppings.includes(topping.topping_id)}
+              checked={formValues.toppings.includes(topping.topping_id)}
               onChange={handleChange}
             />
             {topping.text}<br />
