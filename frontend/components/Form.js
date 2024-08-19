@@ -73,7 +73,7 @@ export default function Form() {
       await validationSchema.validate(formValues, { abortEarly: false });
       const response = await axios.post('http://localhost:9009/api/order', payload);
       const { message } = response.data;
-      setSuccessMessage(message);
+      setSuccessMessage(`Thank you for your order, ${formValues.fullName}!`);
       setFailureMessage('');
       setFormValues(initialValues);
       setErrors(initialErrors); // Reset errors to intital state after successful submission
