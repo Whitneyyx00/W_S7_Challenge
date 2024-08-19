@@ -2,11 +2,21 @@ import React, { useEffect, useState } from 'react';
 import * as Yup from 'yup';
 import axios from 'axios';
 
-// 👇 Here you will create your schema.
+const validationErrors = {
+  fullNameTooShort: 'full name must be at least 3 characters',
+  fullNameTooLong: 'full name must be at most 20 characters',
+  sizeIncorrect: 'size must be S or M or L',
+};
+
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string().trim().min(3, 'full name must be at least 3 characters').required('full name is required'),
-  size: Yup.string().oneOf(['S', 'M', 'L'], 'size must be S or M or L').required('size is required'),
-  toppings: Yup.array().of(Yup.number().oneOf([1, 2, 3, 4, 5]))
+  fullName: Yup.string()
+    .min(3, validationErrors.fullNameTooShort)
+    .max(20, validationErrors.fullNameTooLong)
+    .required('full name must be at least 3 characters'),
+  size: Yup.string()
+    .oneOf(['S', 'M', 'L'], validationErrors.sizeIncorrect)
+    .required('size is required'),
+  toppings: Yup.array().of(Yup.number()).required(),
 });
 
 const initialValues = {
@@ -15,7 +25,11 @@ const initialValues = {
   toppings: []
 };
 
-// 👇 This array could help you construct your checkboxes using .map in the JSX.
+const initialErrors = () => ({
+  fullName: '',
+  size: '',
+});
+
 const toppings = [
   { topping_id: '1', text: 'Pepperoni' },
   { topping_id: '2', text: 'Green Peppers' },
@@ -24,134 +38,134 @@ const toppings = [
   { topping_id: '5', text: 'Ham' },
 ]
 
-export default function PizzaOrderForm() {
-  const [formValues, setFormValues] = useState(initialValues);
-  const [errors, setErrors] = useState({});
+export default function Form() {
+  const [formValues, setFormValues] = useState(initialValues());
+  const [errors, setErrors] = useState(initialErrors());
   const [successMessage, setSuccessMessage] = useState('');
+  const [failureMessage, setFailureMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-      setFormValues(prev => ({
-        ...prev,
-        toppings: checked
-          ? [...prev.toppings, Number(value)]
-          : prev.toppings.filter(topping => topping !== Number(value))
-      }));
-    } else {
-      setFormValues({ ...formValues, [name]: value });
-    }
-  };
+  useEffect(() => {
+    const validateForm = async () => {
+      try {
+        await validationSchema.validate(formValues, { abortEarly: false });
+        setIsSubmitting(true);
+      } catch (err) {
+        setIsSubmitting(false);
+      }
+    };
+    validateForm();
+  }, [formValues]);
 
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    try {
-      validationSchema.validateSyncAt(name, formValues);
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    } catch (err) {
-      setErrors(prev => ({ ...prev, [name]: err.message }));
-    }
-  };
+  const handleSubmit = async (evt) => {
+    evt.preventDefault();
 
-  // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrors({});
-    setSuccessMessage('');
-    setIsSubmitting(true);
+    const payload = {
+      fullName: formValues.fullName,
+      size: formValues.size,
+      toppings: formValues.toppings,
+    };
 
     try {
       await validationSchema.validate(formValues, { abortEarly: false });
-
-      // Axios integration
-      const response = await axios.post('https://localhost:9009/order', formValues);
-
-      setSuccessMessage(`Thank you for your order, ${formValues.fullName}! Order ID: ${response.data.orderId}`);
-      setFormValues(initialValues);
-    } catch (err) {
-      if (err.name === 'ValidationError') {
-        const newErrors = {};
-        err.inner.forEach(error => {
-          newErrors[error.path] = error.message;
-        });
+      const response = await axios.post('http://localhost:9009/api/order', payload);
+      const { message } = response.data;
+      setSuccessMessage(message);
+      setFailureMessage('');
+      setFormValues(initialValues());
+      setErrors(initialErrors()); // Reset errors to intital state after successful submission
+    } catch (error) {
+      if (error.inner) {
+        const newErrors = error.inner.reduce((acc, err) => {
+          acc[err.path] = err.message;
+          return acc;
+        }, {});
         setErrors(newErrors);
       } else {
-        console.error('API Error:', err);
-        setErrors({ api: 'An error occured while submitting your order. Please try again.' });
+        setFailureMessage('Failed to place order. Please try again.');
+        setSuccessMessage('');
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const isFormValid = () => {
-    return formValues.fullName.trim().length >= 3 && ['S', 'M', 'L'].includes(formValues.size);
+  const handleChange = async (evt) => {
+    const { type, checked, name, value } = evt.target;
+    const toppingId = toppings.find((topping) => topping.text === name)?.topping_id;
+
+    if (type === 'checkbox') {
+      setFormValues((prevFormValues) => {
+        const updatedToppings = checked
+          ? [...prevFormValues.toppings, toppingId]
+          : prevFormValues.toppings.filter((id) => id !== toppingId);
+
+        return { ...prevFormValues, toppings: updatedToppings };
+      });
+    } else {
+      const trimmedValue = value.trim(); // Trim the input value
+      setFormValues((prevFormValues) => ({ ...prevFormValues, [name]: trimmedValue }));
+
+      try {
+        // Validate individual form field value
+        await Yup.reach(validationSchema, name).validate(trimmedValue);
+        setErrors((prevErrors) => ({ ...prevErrors, [name]: err.message })); // Set error message if invalid
+      }
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
+      {successMessage && <div className='success'>{successMessage}</div>}
+      {failureMessage && <div className='failure'>{failureMessage}</div>}
 
-    <fieldset>
+    <div className="input-group">
       <div>
-        <legend htmlFor="fullName">Full Name:</legend>
+        <label htmlFor="fullName">Full Name</label>
         <input
-          type="text"
-          id="fullName"
-          name="fullName"
+          value={values.fullName} // Value for fullName
+          name="fullName" // Name attribute for fullName
+          onChange={handleChange} // Change handler for fullName
           placeholder="Type full name"
-          value={formValues.fullName}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          aria-invalid={errors.fullName ? "true" : "false"}
-          aria-describedby="fullNameError"
+          id="fullName"
+          type="text"
         />
-        {errors.fullName && <p id="fullNameError" className="error">{errors.fullName}</p>}
+        {errors.fullName && <div className="error">{errors.fullName}</div>} {/* Display validation error for fullName */}
       </div>
-    </fieldset>
-    <br />
-    <fieldset>
+    </div>
+    
+    <div className="input-group">
       <div>
-        <legend htmlFor="size">Size:</legend>
+        <label htmlFor="size">Size</label>
         <select
-          id="size"
           name="size"
-          value={formValues.size}
           onChange={handleChange}
-          onBlur={handleBlur}
-          aria-invalid={errors.size ? "true" : "false"}
-          aria-describedby="sizeError"
+          value={values.size}
+          id="size"
         >
           <option value="">----Choose Size----</option>
           <option value="S">Small</option>
           <option value="M">Medium</option>
           <option value="L">Large</option>
         </select>
-        {errors.size && <p id="sizeError" className="error">{errors.size}</p>}
+        {errors.size && <div className="error">{errors.size}</div>}
       </div>
-    </fieldset>
-    <br />
-      <fieldset>
+    </div>
+  
+      <div className="input-group">
         {toppings.map((topping) => (
-          <div key={topping.topping_id}>
+          <label key={topping.topping_id}>
             <input
               type="checkbox"
-              id={`topping-${topping.topping_id}`}
-              name="toppings"
-              value={topping.topping_id}
-              checked={formValues.toppings.includes(Number(topping.topping_id))}
+              name={topping.text}
+              checked={values.toppings.includes(topping.topping_id)}
               onChange={handleChange}
             />
-            <label htmlFor={`topping-${topping.topping_id}`}>{topping.text}</label>
-          </div>
+            {topping.text}<br />
+            </label>
         ))}
-      </fieldset>
-      <br />
-      <button type="submit" disabled={!isFormValid() || isSubmitting} data-testid="submit-button">{isSubmitting ? 'Ordering...' : 'Order Pizza'}</button>
-
-      {successMessage && <p className="success">{successMessage}</p>}
-      {errors.api && <p className="error">{errors.api}</p>}
+      </div>
+  
+      <input disabled={!enabled} type="submit" />
     </form>
   );
 }

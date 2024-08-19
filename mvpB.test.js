@@ -1,44 +1,33 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { BrowserRouter as Router } from 'react-router-dom';
-import axios from 'axios';
-import PizzaOrderForm from '../frontend/components/Form';
 
-jest.mock('axios');
+describe('Sprint 7 Challenge Learner Tests', () => {
+  function sum(a, b) {
+    a = Number(a);
+    b = Number(b);
+    if (isNaN(a) || isNaN(b)) {
+      throw new Error('pass valid numbers');
+    }
+    return a + b
+  }
 
-describe('PizzaOrderForm', () => {
- test('renders form elements', () => {
-  render(<PizzaOrderForm />);
-  expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
-  expect(screen.getByLabelText(/size/i)).toBeInTheDocument();
-  expect(screen.getByText(/toppings/i)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /order pizza/i })).toBeInTheDocument();
- });
-
- test('validates form input', async () => {
-  render(<PizzaOrderForm />);
-  fireEvent.click(screen.getByRole('button', { name: /order pizza/i }));
-  await waitFor(() => {
-    expect(screen.getByText(/full name is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/size is required/i)).toBeInTheDocument();
+  it('should throw an error when no arguments are passed to sum()', () => {
+    expect(() => sum()).toThrow('pass valid numbers');
   });
- });
 
- test('submits form successfully', async () => {
-  axios.post.mockResolvedValue({ data: { message: 'Order placed successfully!' } });
-  render(<PizzaOrderForm />);
-
-  fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'John Doe' } });
-  fireEvent.change(screen.getByLabelText(/size/i), { target: { value: 'M' } });
-  fireEvent.click(screen.getByLabelText(/pepperoni/i));
-
-  fireEvent.click(screen.getByRole('button', { name: /order pizza/i }));
-
-  await waitFor(() => {
-    expect(screen.getByText(/order placed successfully/i)).toBeInTheDocument();
+  it('should throw an error when non-numeric arguments are passed to sum()', () => {
+    expect(() => sum(2, 'seven')).toThrow('pass valid numbers');
   });
- });
+
+  it('should return the correct sum when valid numeric arguments are passed', () => {
+    expect(sum(1, 3)).toBe(4);
+  });
+
+  it('should handle string numeric arguments and return the correct sum', () => {
+    expect(sum('1', 2)).toBe(3);
+    expect(sum('10', 3)).toBe(13);
+  });
 
   /*
   👉 TASK 2 - Integration Testing of HelloWorld component at the bottom of this module
@@ -54,19 +43,17 @@ describe('PizzaOrderForm', () => {
     [5] renders a text that reads "JavaScript is pretty awesome"
     [6] renders a text that includes "javaScript is pretty" (use exact = false)
   */
-  test('you can comment out this test', () => {
-    expect(true).toBe(false)
+  it('renders links in HelloWorld component', () => {
+    render(<HelloWorld />);
+
+    expect(screen.queryByText('Home')).toBeInTheDocument();
+    expect(screen.queryByText('About')).toBeInTheDocument();
+    expect(screen.queryByText('Blog')).toBeInTheDocument();
+    expect(screen.queryByText('The Truth')).toBeInTheDocument();
+    expect(screen.queryByText('JavaScript is pretty awesome')).toBeInTheDocument();
+    expect(screen.queryByText(/javaScript is pretty/i)).toBeInTheDocument();
   });
 });
-
-function sum(a, b) {
-  a = Number(a)
-  b = Number(b)
-  if (isNaN(a) || isNaN(b)) {
-    throw new Error('pass valid numbers')
-  }
-  return a + b
-}
 
 function HelloWorld() {
   return (

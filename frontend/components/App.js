@@ -1,6 +1,6 @@
 import React from 'react';
 import Home from './Home';
-import PizzaOrderForm from './Form';
+import Form from './Form';
 import { NavLink, Route, Routes } from 'react-router-dom';
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/order" element={<PizzaOrderForm />} />
+        <Route path="/order" element={<Form />} />
       </Routes>
     </div>
   );
