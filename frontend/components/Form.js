@@ -44,14 +44,17 @@ export default function Form() {
   const [successMessage, setSuccessMessage] = useState('');
   const [failureMessage, setFailureMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   useEffect(() => {
     const validateForm = async () => {
       try {
         await validationSchema.validate(formValues, { abortEarly: false });
         setIsSubmitting(true);
+        setIsFormValid(true);
       } catch (err) {
         setIsSubmitting(false);
+        setIsFormValid(false);
       }
     };
     validateForm();
@@ -169,7 +172,7 @@ export default function Form() {
         ))}
       </div>
   
-      <input disabled={!enabled} type="submit" />
+      <input disabled={!isFormValid} type="submit" data-testid="submit-button" value={isSubmitting ? 'Submitting...' : 'Order Pizza'} />
     </form>
   );
 }
