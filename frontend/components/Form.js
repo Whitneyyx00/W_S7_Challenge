@@ -75,8 +75,8 @@ export default function Form() {
       const { message } = response.data;
       setSuccessMessage(message);
       setFailureMessage('');
-      setFormValues(initialValues());
-      setErrors(initialErrors()); // Reset errors to intital state after successful submission
+      setFormValues(initialValues);
+      setErrors(initialErrors); // Reset errors to intital state after successful submission
     } catch (error) {
       if (error.inner) {
         const newErrors = error.inner.reduce((acc, err) => {
