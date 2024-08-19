@@ -122,8 +122,8 @@ export default function Form() {
   return (
     <form onSubmit={handleSubmit}>
       <h2>Order Your Pizza</h2>
-      {successMessage && <div className='success'>{successMessage}</div>}
-      {failureMessage && <div className='failure'>{failureMessage}</div>}
+      {successMessage && <div className='success'>{message}</div>}
+      {failureMessage && <div className='failure'>Something went wrong</div>}
 
     <div className="input-group">
       <div>
